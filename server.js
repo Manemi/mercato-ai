@@ -19804,20 +19804,25 @@ function generateCouponCode(prefix = 'MRC') {
   return `${cleanPrefix}${suffix}`.slice(0, 10);
 }
 
+const UA_MOBILE_PREFIXES = new Set(['39', '50', '63', '66', '67', '68', '73', '89', '91', '92', '93', '94', '95', '96', '97', '98', '99']);
+
 function normalizePhone(value) {
   const digits = String(value || '').replace(/\D/g, '');
   if (!digits) return '';
-  if (digits.length === 10 && digits.startsWith('0')) return `38${digits}`;
-  if (digits.length === 12 && digits.startsWith('380')) return digits;
-  if (digits.length >= 9 && digits.length <= 15) return digits;
-  return '';
+  let local = '';
+  if (digits.length === 10 && digits.startsWith('0')) local = digits;
+  else if (digits.length === 12 && digits.startsWith('380')) local = digits.slice(2);
+  else return '';
+  if (!/^0\d{9}$/.test(local)) return '';
+  if (!UA_MOBILE_PREFIXES.has(local.slice(1, 3))) return '';
+  return `38${local}`;
 }
 
 function firstOrderPopupContactKey({ email = '', phone = '' } = {}) {
-  const cleanEmail = normalizeEmail(email).toLowerCase();
-  if (cleanEmail) return `email:${cleanEmail}`;
   const cleanPhone = normalizePhone(phone);
   if (cleanPhone) return `phone:${cleanPhone}`;
+  const cleanEmail = normalizeEmail(email).toLowerCase();
+  if (cleanEmail) return `email:${cleanEmail}`;
   return '';
 }
 
@@ -19880,9 +19885,9 @@ const DEFAULT_FIRST_ORDER_POPUP_CONFIG = {
   },
   text: {
     title: '-10% на перше замовлення',
-    subtitle: 'Введіть свій email або телефон — отримаєте персональний промокод.',
-    emailPlaceholder: 'Email',
-    phonePlaceholder: 'Телефон',
+    subtitle: 'Введіть свій телефон — отримаєте персональний промокод.',
+    emailPlaceholder: 'Email (необовʼязково)',
+    phonePlaceholder: '+380994503223',
     consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',
     submit: 'Отримати промокод',
     loading: 'Створюємо код...',
@@ -19891,8 +19896,8 @@ const DEFAULT_FIRST_ORDER_POPUP_CONFIG = {
     successNote: 'Знижка -10% від 600 грн, дійсний 3 дні',
     copyButton: 'Скопіювати код',
     copiedButton: 'Скопійовано',
-    legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами.',
-    contactError: 'Вкажіть email або телефон.',
+    legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами. Телефон у замовленні має збігатися з телефоном, введеним у попапі.',
+    contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.',
     consentError: 'Потрібна згода на отримання промокоду та повідомлень.'
   },
   exclusions: {
@@ -20212,13 +20217,18 @@ app.post('/api/first-order-popup/lead', async (req, res) => {
     if (!leadInput.consent) {
       return res.status(400).json({ ok: false, reason: 'consent_required', error: 'Потрібна згода на отримання персонального промокоду та повідомлень.' });
     }
-    if (!leadInput.email && !leadInput.phone) {
-      return res.status(400).json({ ok: false, reason: 'contact_required', error: 'Вкажіть email або телефон.' });
+    if (!leadInput.phone) {
+      return res.status(400).json({
+        ok: false,
+        reason: 'phone_required',
+        error: popupConfig.text?.contactError || 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.'
+      });
     }
     if (leadInput.pageUrl && firstOrderPopupPageExcluded(leadInput.pageUrl)) {
       return res.status(403).json({ ok: false, reason: 'excluded_page', error: 'Попап вимкнений для цієї сторінки.' });
     }
-    const existingLead = firstOrderPopupLeadByContact(leadInput.contactKey);
+    const existingLead = firstOrderPopupLeadByContact(leadInput.contactKey)
+      || (leadInput.email ? firstOrderPopupLeadByContact(`email:${leadInput.email.toLowerCase()}`) : null);
     if (existingLead?.firstCoupon || existingLead?.status) {
       return res.status(409).json({ ok: false, reason: 'already_registered', error: 'Для цього контакту промокод уже створено.' });
     }
@@ -20237,7 +20247,7 @@ app.post('/api/first-order-popup/lead', async (req, res) => {
     const couponCode = generateCouponCode(first.prefix);
     const created = await callBridge('create_coupon', {
       code: couponCode,
-      name: `Mercato first order popup ${leadInput.email || leadInput.phone}`,
+      name: `Mercato first order popup +${leadInput.phone}`,
       discount: first.discount,
       type: 'P',
       days: first.validDays,

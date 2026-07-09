@@ -41,9 +41,9 @@
     },
     text: {
       title: '-10% на перше замовлення',
-      subtitle: 'Введіть свій email або телефон — отримаєте персональний промокод.',
-      emailPlaceholder: 'Email',
-      phonePlaceholder: 'Телефон',
+      subtitle: 'Введіть свій телефон — отримаєте персональний промокод.',
+      emailPlaceholder: 'Email (необовʼязково)',
+      phonePlaceholder: '+380994503223',
       consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',
       submit: 'Отримати промокод',
       loading: 'Створюємо код...',
@@ -52,8 +52,8 @@
       successNote: 'Знижка -10% від 600 грн, дійсний 3 дні',
       copyButton: 'Скопіювати код',
       copiedButton: 'Скопійовано',
-      legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами.',
-      contactError: 'Вкажіть email або телефон.',
+      legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами. Телефон у замовленні має збігатися з телефоном, введеним у попапі.',
+      contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.',
       consentError: 'Потрібна згода на отримання промокоду та повідомлень.'
     },
     exclusions: {
@@ -231,8 +231,8 @@
       '<h3 class="mrc-pop-title" id="mrc-pop-title">' + escapeHtml(t.title) + '</h3>',
       '<p class="mrc-pop-sub">' + escapeHtml(t.subtitle) + '</p>',
       '<form class="mrc-pop-form" novalidate>',
-      '<input class="mrc-pop-input" name="email" type="email" inputmode="email" autocomplete="email" placeholder="' + escapeHtml(t.emailPlaceholder) + '">',
       '<input class="mrc-pop-input" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="' + escapeHtml(t.phonePlaceholder) + '">',
+      '<input class="mrc-pop-input" name="email" type="email" inputmode="email" autocomplete="email" placeholder="' + escapeHtml(t.emailPlaceholder) + '">',
       '<label class="mrc-pop-consent"><input type="checkbox" name="consent"><span>' + escapeHtml(t.consent) + '</span></label>',
       '<input class="mrc-pop-input mrc-pop-hp" name="website" tabindex="-1" autocomplete="off">',
       '<p class="mrc-pop-error" aria-live="polite"></p>',
@@ -275,7 +275,7 @@
       overlay.classList.add('is-open');
       document.documentElement.classList.add('mrc-pop-lock');
       document.body.classList.add('mrc-pop-lock');
-      var input = overlay.querySelector('.mrc-pop-input[name="email"]');
+      var input = overlay.querySelector('.mrc-pop-input[name="phone"]');
       if (input && window.innerWidth >= 700) input.focus();
     });
     dataLayerPush('popup_view', { popup_id: campaign.campaignId, trigger: reason || 'unknown' });
@@ -287,6 +287,37 @@
     if (email) return 'email';
     if (phone) return 'phone';
     return '';
+  }
+
+  var uaMobilePrefixes = {
+    '39': true,
+    '50': true,
+    '63': true,
+    '66': true,
+    '67': true,
+    '68': true,
+    '73': true,
+    '89': true,
+    '91': true,
+    '92': true,
+    '93': true,
+    '94': true,
+    '95': true,
+    '96': true,
+    '97': true,
+    '98': true,
+    '99': true
+  };
+
+  function normalizeUaPhone(value) {
+    var digits = String(value || '').replace(/\D/g, '');
+    var local = '';
+    if (digits.length === 10 && digits.charAt(0) === '0') local = digits;
+    else if (digits.length === 12 && digits.indexOf('380') === 0) local = digits.slice(2);
+    else return '';
+    if (!/^0\d{9}$/.test(local)) return '';
+    if (!uaMobilePrefixes[local.slice(1, 3)]) return '';
+    return '38' + local;
   }
 
   function setError(errorNode, message) {
@@ -321,7 +352,8 @@
       setError(error, '');
       var email = String(form.email.value || '').trim();
       var phone = String(form.phone.value || '').trim();
-      if (!email && !phone) {
+      var normalizedPhone = normalizeUaPhone(phone);
+      if (!normalizedPhone) {
         setError(error, t.contactError);
         return;
       }
@@ -338,9 +370,9 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign({}, params, {
-          contact: email || phone,
+          contact: '+' + normalizedPhone,
           email: email,
-          phone: phone,
+          phone: '+' + normalizedPhone,
           consent: form.consent.checked,
           website: form.website.value,
           landingPage: local ? local.getItem(keys.seenAt + '_landing') || window.location.href : window.location.href,
@@ -363,8 +395,9 @@
           if (local) {
             local.setItem(keys.submitted, '1');
             local.setItem(keys.code, data.code || '');
+            local.setItem(keys.code + '_phone', normalizedPhone);
           }
-          dataLayerPush('popup_submit', { popup_id: campaign.campaignId, contact_type: contactType(email, phone) });
+          dataLayerPush('popup_submit', { popup_id: campaign.campaignId, contact_type: contactType(email, normalizedPhone) });
           dataLayerPush('first_discount_code_created', {
             popup_id: campaign.campaignId,
             coupon: data.code,

@@ -83,9 +83,13 @@ const FALLBACK = {
       triggers: { timeMinSeconds: 10, timeMaxSeconds: 15, scrollPercent: 40, exitIntentDesktop: true },
       text: {
         title: '-10% на перше замовлення',
-        subtitle: 'Введіть свій email або телефон — отримаєте персональний промокод.',
+        subtitle: 'Введіть свій телефон — отримаєте персональний промокод.',
+        emailPlaceholder: 'Email (необовʼязково)',
+        phonePlaceholder: '+380994503223',
         consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',
-        submit: 'Отримати промокод'
+        submit: 'Отримати промокод',
+        legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами. Телефон у замовленні має збігатися з телефоном, введеним у попапі.',
+        contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.'
       }
     },
     snippet: '<script src="https://crm.mercato.com.ua/mercato-first-order-popup.js" async></script>'

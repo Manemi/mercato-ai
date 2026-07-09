@@ -58,7 +58,7 @@ defineBridgeConstant('DB_PASS', bridgeValue($bridgeSecrets, 'DB_PASS', 'MERCATO_
 defineBridgeConstant('DB_NAME', bridgeValue($bridgeSecrets, 'DB_NAME', 'MERCATO_DB_NAME', defined('DB_DATABASE') ? DB_DATABASE : null));
 defineBridgeConstant('PREFIX', bridgeValue($bridgeSecrets, 'PREFIX', 'MERCATO_DB_PREFIX', defined('DB_PREFIX') ? DB_PREFIX : 'oc_'));
 defineBridgeConstant('LANG_ID', bridgeValue($bridgeSecrets, 'LANG_ID', 'MERCATO_LANG_ID', 2)); // Ukrainian storefront language in this OpenCart database
-define('BRIDGE_VERSION', '2026-07-09-first-order-popup-v36');
+define('BRIDGE_VERSION', '2026-07-09-first-order-popup-v37-phone-guard');
 
 // Auth
 if (!defined('SECRET') || !SECRET) {
@@ -3996,21 +3996,37 @@ function growthNormalizeEmail(string $value): string {
 function growthNormalizePhone(string $value): string {
     $digits = preg_replace('/\D+/', '', $value);
     if (!$digits) return '';
-    if (strlen($digits) === 10 && substr($digits, 0, 1) === '0') return '38' . $digits;
-    if (strlen($digits) >= 9 && strlen($digits) <= 15) return $digits;
-    return '';
+    $local = '';
+    if (strlen($digits) === 10 && substr($digits, 0, 1) === '0') {
+        $local = $digits;
+    } elseif (strlen($digits) === 12 && substr($digits, 0, 3) === '380') {
+        $local = substr($digits, 2);
+    } else {
+        return '';
+    }
+    if (!preg_match('/^0\d{9}$/', $local)) return '';
+    $allowed = ['39' => true, '50' => true, '63' => true, '66' => true, '67' => true, '68' => true, '73' => true, '89' => true, '91' => true, '92' => true, '93' => true, '94' => true, '95' => true, '96' => true, '97' => true, '98' => true, '99' => true];
+    if (empty($allowed[substr($local, 1, 2)])) return '';
+    return '38' . $local;
 }
 
 function growthContactKey(string $email, string $phone): string {
-    $email = growthNormalizeEmail($email);
-    if ($email) return 'email:' . $email;
     $phone = growthNormalizePhone($phone);
     if ($phone) return 'phone:' . $phone;
+    $email = growthNormalizeEmail($email);
+    if ($email) return 'email:' . $email;
     return '';
 }
 
 function growthPhoneSql(string $column): string {
     return "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE($column, '+', ''), ' ', ''), '-', ''), '(', ''), ')', ''), '.', '')";
+}
+
+function growthPhoneCandidates(string $phone): array {
+    $normalized = growthNormalizePhone($phone);
+    if (!$normalized) return [];
+    $local = substr($normalized, 2);
+    return array_values(array_unique([$normalized, $local]));
 }
 
 function growthLeadRow(mysqli $db, string $contactKey): ?array {
@@ -4022,16 +4038,34 @@ function growthLeadRow(mysqli $db, string $contactKey): ?array {
 }
 
 function growthFindLead(mysqli $db, string $email, string $phone): ?array {
-    $contactKey = growthContactKey($email, $phone);
-    if (!$contactKey) return null;
-    return growthLeadRow($db, $contactKey);
+    $keys = [];
+    $phone = growthNormalizePhone($phone);
+    if ($phone) $keys[] = 'phone:' . $phone;
+    $email = growthNormalizeEmail($email);
+    if ($email) $keys[] = 'email:' . $email;
+    foreach (array_unique($keys) as $contactKey) {
+        $lead = growthLeadRow($db, $contactKey);
+        if ($lead) return $lead;
+    }
+    return null;
+}
+
+function growthFindLeadByCoupon(mysqli $db, string $couponCode): ?array {
+    ensureGrowthLeadTable($db);
+    $code = strtoupper(preg_replace('/[^A-Z0-9_-]/', '', $couponCode));
+    if (!$code) return null;
+    $codeEsc = $db->real_escape_string($code);
+    $res = $db->query("SELECT * FROM `" . growthLeadTable() . "` WHERE first_coupon='$codeEsc' OR second_coupon='$codeEsc' LIMIT 1");
+    $row = $res ? $res->fetch_assoc() : null;
+    return $row ?: null;
 }
 
 function growthUpsertLead(mysqli $db, array $lead): array {
     ensureGrowthLeadTable($db);
     $email = growthNormalizeEmail((string)($lead['email'] ?? ''));
     $phone = growthNormalizePhone((string)($lead['phone'] ?? $lead['telephone'] ?? ''));
-    $contactKey = (string)($lead['contact_key'] ?? growthContactKey($email, $phone));
+    $contactKey = growthContactKey($email, $phone);
+    if (!$contactKey) $contactKey = (string)($lead['contact_key'] ?? '');
     if (!$contactKey) throw new Exception('Growth lead contact is empty');
 
     $existing = growthLeadRow($db, $contactKey) ?: [];
@@ -4219,6 +4253,24 @@ function growthHandleOrderComplete(mysqli $db, int $orderId, array $options = []
         return ['ok' => true, 'order' => $order, 'lead' => $lead, 'reason' => 'no_first_popup_coupon', 'events' => []];
     }
 
+    $leadByCoupon = growthFindLeadByCoupon($db, (string)($firstCoupon['code'] ?? ''));
+    if ($leadByCoupon) {
+        if (empty($lead)) $lead = $leadByCoupon;
+        $leadPhone = growthNormalizePhone((string)($leadByCoupon['phone'] ?? ''));
+        if ($leadPhone && $leadPhone !== $phone) {
+            $events[] = ['name' => 'first_discount_contact_mismatch', 'at' => date('c'), 'code' => $firstCoupon['code'], 'order_id' => $orderId];
+            return [
+                'ok' => false,
+                'order' => $order,
+                'lead' => $leadByCoupon,
+                'first_coupon' => $firstCoupon,
+                'reason' => 'coupon_contact_mismatch',
+                'error' => 'Телефон у замовленні не збігається з телефоном, для якого створено промокод.',
+                'events' => $events
+            ];
+        }
+    }
+
     $events[] = ['name' => 'first_discount_used', 'at' => date('c'), 'code' => $firstCoupon['code'], 'order_id' => $orderId];
     if (!empty($lead['second_coupon'])) {
         return [
@@ -4283,7 +4335,14 @@ if ($action === 'growth_contact_status') {
 
     $where = [];
     if ($email) $where[] = "LOWER(c.email)='" . $db->real_escape_string($email) . "'";
-    if ($phone) $where[] = growthPhoneSql('c.telephone') . "='" . $db->real_escape_string($phone) . "'";
+    if ($phone) {
+        $phoneSql = growthPhoneSql('c.telephone');
+        $phoneWhere = [];
+        foreach (growthPhoneCandidates($phone) as $candidate) {
+            $phoneWhere[] = $phoneSql . "='" . $db->real_escape_string($candidate) . "'";
+        }
+        if ($phoneWhere) $where[] = '(' . implode(' OR ', $phoneWhere) . ')';
+    }
     $customer = null;
     if ($where) {
         $res = $db->query(

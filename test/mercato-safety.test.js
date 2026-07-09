@@ -21,8 +21,14 @@ test('coupon codes stay OpenCart-admin compatible', () => {
 
 test('first order popup guards visitor eligibility inputs', () => {
   assert.equal(helpers.normalizePhone('+38 (067) 123-45-67'), '380671234567');
+  assert.equal(helpers.normalizePhone('067 123 45 67'), '380671234567');
+  assert.equal(helpers.normalizePhone('0994503223'), '380994503223');
+  assert.equal(helpers.normalizePhone('380994503223'), '380994503223');
+  assert.equal(helpers.normalizePhone('994503223'), '');
+  assert.equal(helpers.normalizePhone('123456789'), '');
   assert.equal(helpers.firstOrderPopupContactKey({ email: 'Client@Example.com' }), 'email:client@example.com');
   assert.equal(helpers.firstOrderPopupContactKey({ phone: '067 123 45 67' }), 'phone:380671234567');
+  assert.equal(helpers.firstOrderPopupContactKey({ email: 'Client@Example.com', phone: '0994503223' }), 'phone:380994503223');
 
   assert.equal(helpers.firstOrderPopupPageExcluded('https://mercato.com.ua/checkout'), true);
   assert.equal(helpers.firstOrderPopupPageExcluded('https://mercato.com.ua/account/login'), true);
@@ -66,6 +72,8 @@ test('first order popup storefront script emits required dataLayer events', () =
   assert.match(script, /exit_intent/);
   assert.match(script, /7 \* 24 \* 60 \* 60 \* 1000/);
   assert.match(script, /api\/first-order-popup\/config/);
+  assert.match(script, /normalizeUaPhone/);
+  assert.match(script, /Введіть телефон у форматі/);
   assert.match(script, /name="email"/);
   assert.match(script, /name="phone"/);
   assert.match(css, /#c9622a/);
@@ -1597,13 +1605,15 @@ test('merchant feed agents scan deterministically and gate writes behind approva
   assert.match(serverJs, /Internal Linking Agent заблоковано: внутрішні посилання не можна додавати замість фактичного опису/);
   assert.match(serverJs, /Internal Linking Agent заблоковано для товарних описів/);
   assert.match(bridgePhp, /merchant_feed_audit_list/);
-  assert.match(bridgePhp, /2026-07-09-first-order-popup-v36/);
+  assert.match(bridgePhp, /2026-07-09-first-order-popup-v37-phone-guard/);
   assert.match(bridgePhp, /JSON_INVALID_UTF8_SUBSTITUTE/);
   assert.match(bridgePhp, /merchantVariantOptionsByProduct/);
   assert.match(bridgePhp, /merchant_apply_product_patch/);
   assert.match(bridgePhp, /merchant_feed_overrides/);
   assert.match(bridgePhp, /growth_contact_status/);
   assert.match(bridgePhp, /growth_order_complete/);
+  assert.match(bridgePhp, /growthPhoneCandidates/);
+  assert.match(bridgePhp, /coupon_contact_mismatch/);
   assert.match(bridgePhp, /seo_approved_fixes/);
   assert.match(bridgePhp, /seo_control_inventory/);
   assert.match(bridgePhp, /seo_apply_entity_patch/);
