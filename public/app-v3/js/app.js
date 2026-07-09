@@ -89,7 +89,8 @@ const FALLBACK = {
         consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',
         submit: 'Отримати промокод',
         legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами. Телефон у замовленні має збігатися з телефоном, введеним у попапі.',
-        contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.'
+        contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.',
+        requestError: 'Сервер довго відповідає. Спробуйте ще раз за кілька секунд.'
       }
     },
     snippet: '<script src="https://crm.mercato.com.ua/mercato-first-order-popup.js" async></script>'

@@ -19898,7 +19898,8 @@ const DEFAULT_FIRST_ORDER_POPUP_CONFIG = {
     copiedButton: 'Скопійовано',
     legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами. Телефон у замовленні має збігатися з телефоном, введеним у попапі.',
     contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.',
-    consentError: 'Потрібна згода на отримання промокоду та повідомлень.'
+    consentError: 'Потрібна згода на отримання промокоду та повідомлень.',
+    requestError: 'Сервер довго відповідає. Спробуйте ще раз за кілька секунд.'
   },
   exclusions: {
     pages: ['checkout', 'payment', 'success', 'account', 'horeca', 'ho-re-ca', 'opt', 'optom', 'corporate', 'korporatyv']

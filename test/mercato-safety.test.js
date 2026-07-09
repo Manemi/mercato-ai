@@ -74,6 +74,9 @@ test('first order popup storefront script emits required dataLayer events', () =
   assert.match(script, /api\/first-order-popup\/config/);
   assert.match(script, /normalizeUaPhone/);
   assert.match(script, /Введіть телефон у форматі/);
+  assert.match(script, /AbortController/);
+  assert.match(script, /requestError/);
+  assert.match(script, /querySelector\('input\[name="phone"\]'\)/);
   assert.match(script, /name="email"/);
   assert.match(script, /name="phone"/);
   assert.match(css, /#c9622a/);

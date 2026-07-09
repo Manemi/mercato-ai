@@ -54,7 +54,8 @@
       copiedButton: 'Скопійовано',
       legal: 'Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами. Телефон у замовленні має збігатися з телефоном, введеним у попапі.',
       contactError: 'Введіть телефон у форматі +380XXXXXXXXX або 0XXXXXXXXX.',
-      consentError: 'Потрібна згода на отримання промокоду та повідомлень.'
+      consentError: 'Потрібна згода на отримання промокоду та повідомлень.',
+      requestError: 'Сервер довго відповідає. Спробуйте ще раз за кілька секунд.'
     },
     exclusions: {
       pages: ['checkout', 'payment', 'success', 'account', 'horeca', 'ho-re-ca', 'opt', 'optom', 'corporate', 'korporatyv']
@@ -336,7 +337,12 @@
     var codeBox = root.querySelector('[data-code]');
     var noteBox = root.querySelector('[data-success-note]');
     var copy = root.querySelector('.mrc-pop-copy-btn');
+    var emailInput = root.querySelector('input[name="email"]');
+    var phoneInput = root.querySelector('input[name="phone"]');
+    var consentInput = root.querySelector('input[name="consent"]');
+    var websiteInput = root.querySelector('input[name="website"]');
     var t = campaign.text || defaultCampaign.text;
+    var requestSerial = 0;
 
     close.addEventListener('click', closePopup);
 
@@ -350,37 +356,50 @@
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       setError(error, '');
-      var email = String(form.email.value || '').trim();
-      var phone = String(form.phone.value || '').trim();
+      var email = String((emailInput && emailInput.value) || '').trim();
+      var phone = String((phoneInput && phoneInput.value) || '').trim();
       var normalizedPhone = normalizeUaPhone(phone);
       if (!normalizedPhone) {
         setError(error, t.contactError);
+        if (phoneInput) phoneInput.focus();
         return;
       }
-      if (!form.consent.checked) {
+      if (!consentInput || !consentInput.checked) {
         setError(error, t.consentError);
+        if (consentInput) consentInput.focus();
         return;
       }
 
       submit.disabled = true;
       submit.textContent = t.loading;
+      var currentRequest = ++requestSerial;
+      var controller = window.AbortController ? new AbortController() : null;
+      var timeout = setTimeout(function () {
+        if (currentRequest !== requestSerial) return;
+        if (controller) controller.abort();
+        submit.disabled = false;
+        submit.textContent = t.submit;
+        setError(error, t.requestError || defaultCampaign.text.requestError);
+      }, 25000);
 
       var params = getQueryParams();
-      fetch(config.apiBase + '/api/first-order-popup/lead', {
+      var fetchOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign({}, params, {
           contact: '+' + normalizedPhone,
           email: email,
           phone: '+' + normalizedPhone,
-          consent: form.consent.checked,
-          website: form.website.value,
+          consent: consentInput.checked,
+          website: websiteInput ? websiteInput.value : '',
           landingPage: local ? local.getItem(keys.seenAt + '_landing') || window.location.href : window.location.href,
           pageUrl: window.location.href,
           referrer: document.referrer || '',
           device: window.innerWidth < 760 ? 'mobile' : (window.innerWidth < 1100 ? 'tablet' : 'desktop')
         }))
-      })
+      };
+      if (controller) fetchOptions.signal = controller.signal;
+      fetch(config.apiBase + '/api/first-order-popup/lead', fetchOptions)
         .then(function (response) {
           return response.json().then(function (data) {
             if (!response.ok || !data.ok) {
@@ -391,6 +410,8 @@
           });
         })
         .then(function (data) {
+          if (currentRequest !== requestSerial) return;
+          clearTimeout(timeout);
           submitted = true;
           if (local) {
             local.setItem(keys.submitted, '1');
@@ -414,7 +435,12 @@
           submit.textContent = t.submit;
         })
         .catch(function (err) {
-          setError(error, err.message || 'Не вдалося створити промокод.');
+          if (currentRequest !== requestSerial) return;
+          clearTimeout(timeout);
+          var message = err && err.name === 'AbortError'
+            ? (t.requestError || defaultCampaign.text.requestError)
+            : (err.message || 'Не вдалося створити промокод.');
+          setError(error, message);
           submit.disabled = false;
           submit.textContent = t.submit;
         });
