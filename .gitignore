@@ -13,6 +13,7 @@ npm-debug.log*
 *.json
 !package.json
 !package-lock.json
+!first-order-popup-config.json
 !merchant-system/catalog-policy.json
 *.sqlite
 *.sqlite-*

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "enabled": true,
+  "campaignId": "first_order_discount",
+  "publicBaseUrl": "https://mercato-ai.onrender.com",
+  "cooldownDays": 7,
+  "first": {
+    "prefix": "F10",
+    "discount": 10,
+    "minTotal": 600,
+    "validDays": 3
+  },
+  "second": {
+    "prefix": "F15",
+    "discount": 15,
+    "minTotal": 800,
+    "validDays": 23
+  },
+  "triggers": {
+    "timeMinSeconds": 10,
+    "timeMaxSeconds": 15,
+    "scrollPercent": 40,
+    "exitIntentDesktop": true
+  },
+  "text": {
+    "title": "-10% на перше замовлення",
+    "subtitle": "Введіть свій email або телефон — отримаєте персональний промокод.",
+    "emailPlaceholder": "Email",
+    "phonePlaceholder": "Телефон",
+    "consent": "Погоджуюсь отримати персональний промокод та повідомлення від Mercato",
+    "submit": "Отримати промокод",
+    "loading": "Створюємо код...",
+    "successTitle": "Дякуємо!",
+    "successIntro": "Ваш промокод на перше замовлення:",
+    "successNote": "Знижка -10% від 600 грн, дійсний 3 дні",
+    "copyButton": "Скопіювати код",
+    "copiedButton": "Скопійовано",
+    "legal": "Промокод персональний, одноразовий і не сумується з іншими акціями, накопичувальними знижками, HoReCa, оптом або корпоративними умовами.",
+    "contactError": "Вкажіть email або телефон.",
+    "consentError": "Потрібна згода на отримання промокоду та повідомлень."
+  },
+  "exclusions": {
+    "pages": [
+      "checkout",
+      "payment",
+      "success",
+      "account",
+      "horeca",
+      "ho-re-ca",
+      "opt",
+      "optom",
+      "corporate",
+      "korporatyv"
+    ]
+  },
+  "updatedAt": "2026-07-09T20:12:39.240Z"
+}
