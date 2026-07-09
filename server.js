@@ -609,8 +609,7 @@ const EMAIL_AI_PROVIDER = ['openai', 'anthropic'].includes(RAW_EMAIL_AI_PROVIDER
 const ALLOW_ANTHROPIC_FALLBACK = /^(1|true|yes|on)$/i.test(String(process.env.ALLOW_ANTHROPIC_FALLBACK || ''));
 
 if (!OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
-  console.error('❌ Не знайдено OPENAI_API_KEY або ANTHROPIC_API_KEY в .env файлі');
-  process.exit(1);
+  console.warn('⚠️ OPENAI_API_KEY або ANTHROPIC_API_KEY не задано. AI-функції будуть недоступні, але CRM і popup API стартують.');
 }
 
 const ANTHROPIC_ENABLED = Boolean(process.env.ANTHROPIC_API_KEY)
