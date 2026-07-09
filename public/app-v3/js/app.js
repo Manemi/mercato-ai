@@ -83,7 +83,7 @@ const FALLBACK = {
       triggers: { timeMinSeconds: 10, timeMaxSeconds: 15, scrollPercent: 40, exitIntentDesktop: true },
       text: {
         title: '-10% на перше замовлення',
-        subtitle: 'Залиште email або телефон — надішлемо персональний промокод',
+        subtitle: 'Введіть свій email або телефон — отримаєте персональний промокод.',
         consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',
         submit: 'Отримати промокод'
       }

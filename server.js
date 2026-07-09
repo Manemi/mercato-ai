@@ -19880,7 +19880,7 @@ const DEFAULT_FIRST_ORDER_POPUP_CONFIG = {
   },
   text: {
     title: '-10% на перше замовлення',
-    subtitle: 'Залиште email або телефон — надішлемо персональний промокод',
+    subtitle: 'Введіть свій email або телефон — отримаєте персональний промокод.',
     emailPlaceholder: 'Email',
     phonePlaceholder: 'Телефон',
     consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',

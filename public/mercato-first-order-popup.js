@@ -41,7 +41,7 @@
     },
     text: {
       title: '-10% на перше замовлення',
-      subtitle: 'Залиште email або телефон — надішлемо персональний промокод',
+      subtitle: 'Введіть свій email або телефон — отримаєте персональний промокод.',
       emailPlaceholder: 'Email',
       phonePlaceholder: 'Телефон',
       consent: 'Погоджуюсь отримати персональний промокод та повідомлення від Mercato',
@@ -308,12 +308,6 @@
     var t = campaign.text || defaultCampaign.text;
 
     close.addEventListener('click', closePopup);
-    root.addEventListener('click', function (event) {
-      if (event.target === root) closePopup();
-    });
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape' && opened && !submitted) closePopup();
-    });
 
     copy.addEventListener('click', function () {
       var code = codeBox.textContent.trim();
