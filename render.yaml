@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: mercato-ai
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/first-order-popup/config
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: HOST
+        value: 0.0.0.0
+      - key: PUBLIC_BASE_URL
+        value: https://crm.mercato.com.ua
+      - key: TRACKING_BASE_URL
+        value: https://crm.mercato.com.ua
+      - key: CORS_ORIGINS
+        value: https://mercato.com.ua,https://crm.mercato.com.ua
+      - key: STORE_BASE_URL
+        value: https://mercato.com.ua
+      - key: SITEMAP_URL
+        value: https://mercato.com.ua/sitemap.xml
+      - key: BRIDGE_URL
+        sync: false
+      - key: BRIDGE_SECRET
+        sync: false
+      - key: COMMAND_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "confirmedBrand": "Mercato",
+  "brandScope": "all_products",
+  "brandConfirmedByOwner": true,
+  "brandConfirmedAt": "2026-06-20",
+  "firstBatchProductIds": [
+    "107",
+    "112",
+    "249",
+    "105",
+    "176"
+  ],
+  "firstBatchLimit": 5,
+  "variantExportMode": "canonical_product",
+  "publishAllowed": false
+}

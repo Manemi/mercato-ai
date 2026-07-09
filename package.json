@@ -1,0 +1,27 @@
+{
+  "name": "mercato-ai",
+  "version": "1.0.0",
+  "description": "AI-генератор SEO-описів для Mercato",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "merchant:clean-feed": "node merchant-system/clean-feed-generator.js",
+    "merchant:clean-feed:strict": "node merchant-system/clean-feed-generator.js --skip-current --strict",
+    "merchant:clean-feed:publish": "node merchant-system/clean-feed-publish.js",
+    "merchant:clean-feed:publish:dry-run": "node merchant-system/clean-feed-publish.js --dry-run",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
+    "axios": "^1.16.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "jsdom": "^29.1.1",
+    "multer": "^2.1.1",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^8.0.7",
+    "openai": "^6.37.0"
+  }
+}

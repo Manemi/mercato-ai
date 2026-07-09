@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mercato AI Operator</title>
+  <meta name="theme-color" content="#1A56DB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/app-v2/manifest.json">
+  <link rel="stylesheet" href="/app-v2/styles/app.css?v=operator-v2-mvp-20260607">
+</head>
+<body>
+  <aside class="shell-nav" aria-label="Навігація Mercato AI">
+    <div class="brand">
+      <strong>Mercato AI Operator</strong>
+      <span>AI-команда для підприємця</span>
+    </div>
+    <nav class="nav-list" id="navList">
+      <div class="nav-section-label">Щодня</div>
+      <button class="nav-item active" data-view="onboarding">Головне</button>
+      <button class="nav-item" data-view="today">План на сьогодні</button>
+      <button class="nav-item" data-view="connect">Підключити бізнес</button>
+      <div class="nav-section-label">Робота</div>
+      <button class="nav-item" data-view="customers">Клієнти і повтори</button>
+      <button class="nav-item" data-view="productCard">Товар або послуга</button>
+      <button class="nav-item" data-view="content">SEO і сторінки</button>
+      <button class="nav-item" data-view="store">Дані магазину</button>
+      <div class="nav-section-label">Контроль</div>
+      <button class="nav-item" data-view="monitoring">Реклама, конкуренти, UX</button>
+      <button class="nav-item" data-view="settings">Безпека і доступи</button>
+    </nav>
+    <div class="nav-footer">
+      <span>AI працює сам. Live-дії тільки після вашого погодження.</span>
+      <span id="apiSource">Джерело API: завантаження</span>
+    </div>
+  </aside>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Mercato AI Operator</p>
+        <h1 id="viewTitle">AI-оператор бізнесу</h1>
+        <p class="view-subtitle" id="viewSubtitle">Для підприємця без окремої маркетинг-команди: SEO, реклама, клієнти, контент і щоденні дії в одному місці.</p>
+      </div>
+      <div class="topbar-actions">
+        <span class="sync-state" id="syncState">Завантаження</span>
+        <button class="button secondary" id="refreshBtn">Оновити</button>
+      </div>
+    </header>
+    <section class="route-focus-panel" id="routeFocusPanel" hidden></section>
+
+    <section class="view active" id="view-onboarding" aria-labelledby="viewTitle">
+      <div id="onboardingPanel"></div>
+    </section>
+
+    <section class="view" id="view-connect" aria-labelledby="viewTitle">
+      <div id="connectPanel"></div>
+    </section>
+
+    <section class="view" id="view-today" aria-labelledby="viewTitle">
+      <section class="action-map-panel" id="actionMapPanel"></section>
+      <div class="today-grid">
+        <section class="decision-panel" id="primaryPanel"></section>
+        <section class="readiness-panel" id="readinessPanel"></section>
+      </div>
+      <details class="operator-details">
+        <summary>Запитати оператора або подивитись сигнали</summary>
+        <section class="owner-router-panel" id="ownerRouterPanel"></section>
+        <section class="metric-strip" id="metricStrip"></section>
+      </details>
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <h2>Що оператор підготував далі</h2>
+            <p>Це не меню функцій. Це черга дій, які можна погодити, відкласти або прибрати.</p>
+          </div>
+          <button class="button secondary" data-go="queue">Уся черга</button>
+        </div>
+        <div class="queue-list compact" id="todayQueue"></div>
+      </section>
+    </section>
+
+    <section class="view" id="view-queue">
+      <div class="queue-toolbar">
+        <input id="queueSearch" type="search" placeholder="Пошук дії, товару, клієнта або бізнес-проблеми">
+        <select id="queuePriority">
+          <option value="">Усі пріоритети</option>
+          <option value="high">Високий</option>
+          <option value="medium">Середній</option>
+          <option value="low">Низький</option>
+        </select>
+        <select id="queueType">
+          <option value="">Усі типи</option>
+          <option value="content">Контент / SEO</option>
+          <option value="customer">Клієнти</option>
+          <option value="monitoring">Моніторинг</option>
+          <option value="business">Бізнес</option>
+        </select>
+      </div>
+      <div class="queue-list" id="workQueue"></div>
+    </section>
+
+    <section class="view" id="view-modules">
+      <div id="modulesPanel"></div>
+    </section>
+
+    <section class="view" id="view-content">
+      <div class="content-header">
+        <div>
+          <p class="eyebrow">SEO і сторінки, які можуть привести покупців</p>
+          <h2>Що виправити на сайті, щоб вас краще знаходили і легше купували</h2>
+          <p>Система знаходить сторінки з попитом, слабкі описи, порожні SEO-поля і готує правки мовою покупця. Публікація тільки після preview, dry-run і вашого погодження.</p>
+        </div>
+        <select id="contentTypeFilter">
+          <option value="">Усе</option>
+          <option value="product">Товари</option>
+          <option value="category">Категорії</option>
+          <option value="page">Сторінки</option>
+        </select>
+      </div>
+      <div id="contentTools"></div>
+      <div class="content-layout">
+        <aside class="content-list" id="contentList"></aside>
+        <section class="content-detail" id="contentDetail"></section>
+      </div>
+    </section>
+
+    <section class="view" id="view-productCard">
+      <div id="productCardPanel"></div>
+    </section>
+
+    <section class="view" id="view-workbench">
+      <div class="workbench-layout">
+        <aside class="workbench-list" id="workbenchList"></aside>
+        <section class="workbench-detail" id="workbenchDetail"></section>
+      </div>
+    </section>
+
+    <section class="view" id="view-demo">
+      <div id="demoReadinessPanel"></div>
+    </section>
+
+    <section class="view" id="view-customers">
+      <div id="customersPanel"></div>
+    </section>
+
+    <section class="view" id="view-ads">
+      <div id="adsPanel"></div>
+    </section>
+
+    <section class="view" id="view-store">
+      <div id="storePanel"></div>
+    </section>
+
+    <section class="view" id="view-monitoring">
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+          <h2>Реклама, конкуренти і UX</h2>
+          <p>Тут система дивиться, куди йде бюджет, що роблять конкуренти, які ціни на ринку і що на сайті заважає купити.</p>
+          </div>
+          <div class="content-actions">
+            <button class="button secondary" id="runCompetitorsBtn">Конкуренти</button>
+            <button class="button secondary" id="runUxBtn">UX trends</button>
+          </div>
+        </div>
+        <div id="monitoringPanel"></div>
+      </section>
+    </section>
+
+    <section class="view" id="view-settings">
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <h2>Безпека, доступи і технічні джерела</h2>
+            <p>Підприємець має бачити, що підключено, що система може робити сама, а що завжди потребує підтвердження перед live-дією.</p>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <button class="button secondary" id="clearApiKeyBtn">Скинути API key</button>
+          <button class="button secondary" data-view="modules">Карта можливостей</button>
+          <a class="button secondary as-link" href="/docs/mercato-pilot-offer.md" target="_blank" rel="noopener">Опис цінності</a>
+          <a class="button secondary as-link" href="/command-center?refresh=1" target="_blank" rel="noopener">Сирий Command Center</a>
+          <a class="button secondary as-link" href="/docs/hard-project-audit-2026-05-25.md" target="_blank" rel="noopener">Жорсткий аудит</a>
+          <a class="button secondary as-link" href="/" target="_blank" rel="noopener">Старий технічний інтерфейс</a>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Швидка навігація">
+    <button data-view="onboarding" aria-label="Головне"><span>Головне</span></button>
+    <button data-view="today" aria-label="План"><span>План</span></button>
+    <button data-view="customers" aria-label="Клієнти"><span>Клієнти</span></button>
+    <button data-view="content" aria-label="SEO"><span>SEO</span></button>
+    <button data-view="modules" aria-label="Ще"><span>Ще</span></button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/app-v2/js/app.js?v=operator-v2-mvp-20260607"></script>
+  <script src="/app-v2/js/pwa.js?v=operator-v2-mvp-20260607" defer></script>
+</body>
+</html>

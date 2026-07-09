@@ -1,0 +1,26 @@
+# Secrets
+.env
+.env.*
+!.env.example
+mercato-bridge-secrets.php
+
+# Dependencies / local runtime
+node_modules/
+npm-debug.log*
+.DS_Store
+
+# Local data stores and caches
+*.json
+!package.json
+!package-lock.json
+!merchant-system/catalog-policy.json
+*.sqlite
+*.sqlite-*
+.seo-cache/
+.seo-matplotlib-cache/
+seo-system/audits/
+
+# Local backups and recovered artifacts
+*.backup.php
+*.bak
+*.tmp
