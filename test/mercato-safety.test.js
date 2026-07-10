@@ -22,13 +22,13 @@ test('coupon codes stay OpenCart-admin compatible', () => {
 test('first order popup guards visitor eligibility inputs', () => {
   assert.equal(helpers.normalizePhone('+38 (067) 123-45-67'), '380671234567');
   assert.equal(helpers.normalizePhone('067 123 45 67'), '380671234567');
-  assert.equal(helpers.normalizePhone('0994503223'), '380994503223');
-  assert.equal(helpers.normalizePhone('380994503223'), '380994503223');
-  assert.equal(helpers.normalizePhone('994503223'), '');
+  assert.equal(helpers.normalizePhone('0637299268'), '380637299268');
+  assert.equal(helpers.normalizePhone('380637299268'), '380637299268');
+  assert.equal(helpers.normalizePhone('637299268'), '');
   assert.equal(helpers.normalizePhone('123456789'), '');
   assert.equal(helpers.firstOrderPopupContactKey({ email: 'Client@Example.com' }), 'email:client@example.com');
   assert.equal(helpers.firstOrderPopupContactKey({ phone: '067 123 45 67' }), 'phone:380671234567');
-  assert.equal(helpers.firstOrderPopupContactKey({ email: 'Client@Example.com', phone: '0994503223' }), 'phone:380994503223');
+  assert.equal(helpers.firstOrderPopupContactKey({ email: 'Client@Example.com', phone: '0637299268' }), 'phone:380637299268');
 
   assert.equal(helpers.firstOrderPopupPageExcluded('https://mercato.com.ua/checkout'), true);
   assert.equal(helpers.firstOrderPopupPageExcluded('https://mercato.com.ua/account/login'), true);
