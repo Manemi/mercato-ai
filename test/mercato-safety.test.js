@@ -76,6 +76,9 @@ test('first order popup storefront script emits required dataLayer events', () =
   assert.match(script, /Введіть телефон у форматі/);
   assert.match(script, /AbortController/);
   assert.match(script, /requestError/);
+  assert.match(script, /shownSession/);
+  assert.match(script, /ensureCriticalCss/);
+  assert.doesNotMatch(script, /classList\.(?:add|remove)\('mrc-pop-lock'\)/);
   assert.match(script, /querySelector\('input\[name="phone"\]'\)/);
   assert.match(script, /name="email"/);
   assert.match(script, /name="phone"/);

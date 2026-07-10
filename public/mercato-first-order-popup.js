@@ -69,6 +69,7 @@
     submitted: 'mrc_first_popup_submitted',
     code: 'mrc_first_popup_code',
     session: 'mrc_first_popup_session',
+    shownSession: 'mrc_first_popup_shown_session',
     beginCheckout: 'mrc_begin_checkout_sent',
     purchase: 'mrc_purchase_sent'
   };
@@ -191,6 +192,10 @@
     return Boolean(local && (local.getItem(keys.submitted) === '1' || local.getItem(keys.code)));
   }
 
+  function alreadyShownThisSession() {
+    return Boolean(session && session.getItem(keys.shownSession) === '1');
+  }
+
   function eligible() {
     if (config.force) return true;
     if (!campaign.enabled) return false;
@@ -198,6 +203,7 @@
     if (looksLoggedIn()) return false;
     if (dismissedActive()) return false;
     if (alreadySubmitted()) return false;
+    if (alreadyShownThisSession()) return false;
     return isNewVisitor();
   }
 
@@ -208,6 +214,20 @@
     link.href = config.cssHref;
     link.setAttribute('data-mrc-popup-css', '1');
     document.head.appendChild(link);
+  }
+
+  function ensureCriticalCss() {
+    if (document.getElementById('mrc-popup-critical-css')) return;
+    var style = document.createElement('style');
+    style.id = 'mrc-popup-critical-css';
+    style.textContent = [
+      '.mrc-pop-overlay{position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:rgba(20,16,12,.55);opacity:0;pointer-events:none;transition:opacity .25s ease;}',
+      '.mrc-pop-overlay.is-open{opacity:1;pointer-events:auto;}',
+      '.mrc-pop-dialog{position:relative;width:100%;max-width:420px;max-height:calc(100vh - 40px);overflow:auto;box-sizing:border-box;background:#fff;color:#2b1d10;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;}',
+      '.mrc-pop-close{position:absolute;top:10px;right:14px;}',
+      '.mrc-pop-hp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;}'
+    ].join('');
+    document.head.appendChild(style);
   }
 
   function successNote(data) {
@@ -257,8 +277,6 @@
   function closePopup() {
     if (!overlay) return;
     overlay.classList.remove('is-open');
-    document.documentElement.classList.remove('mrc-pop-lock');
-    document.body.classList.remove('mrc-pop-lock');
     if (!submitted && local) {
       var cooldown = number(campaign.cooldownDays, 7) > 0 ? number(campaign.cooldownDays, 7) * 24 * 60 * 60 * 1000 : DEFAULT_CLOSE_COOLDOWN_MS;
       local.setItem(keys.dismissedUntil, String(now() + cooldown));
@@ -269,13 +287,13 @@
   function openPopup(reason) {
     if (opened || !eligible()) return;
     opened = true;
+    if (session) session.setItem(keys.shownSession, '1');
+    ensureCriticalCss();
     loadCss();
     overlay = overlay || renderPopup();
     bindPopup(overlay);
     window.requestAnimationFrame(function () {
       overlay.classList.add('is-open');
-      document.documentElement.classList.add('mrc-pop-lock');
-      document.body.classList.add('mrc-pop-lock');
       var input = overlay.querySelector('.mrc-pop-input[name="phone"]');
       if (input && window.innerWidth >= 700) input.focus();
     });
@@ -576,7 +594,9 @@
   }
 
   function boot() {
+    ensureCriticalCss();
     loadCampaignConfig().then(function () {
+      if (eligible()) loadCss();
       setupEcommerceEvents();
       setupTriggers();
     });
