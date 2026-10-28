@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Validate read-only runner
+        run: python3 -m unittest discover -s mercato-ops/tests -v
       - name: Call Mercato bridge (read-only allowlist)
         env:
           BRIDGE_URL: https://mercato.com.ua/mercato-bridge.php
