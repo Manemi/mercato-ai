@@ -1,0 +1,41 @@
+name: Mercato OpenCart read-only requests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mercato-ops/requests/*.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mercato-readonly-queue
+  cancel-in-progress: false
+
+jobs:
+  read-open-cart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Call Mercato bridge (read-only allowlist)
+        env:
+          BRIDGE_URL: https://mercato.com.ua/mercato-bridge.php
+          BRIDGE_SECRET: ${{ secrets.MERCATO_BRIDGE_SECRET }}
+        run: python3 mercato-ops/runner.py
+      - name: Commit private JSON results
+        run: |
+          git config user.name "mercato-ops-bot"
+          git config user.email "mercato-ops-bot@users.noreply.github.com"
+          git add mercato-ops/results/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "mercato-ops: read-only response"
+          git pull --rebase origin main
+          git push origin HEAD:main
